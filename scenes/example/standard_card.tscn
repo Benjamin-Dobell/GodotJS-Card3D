@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://bjx4ugu14qx3w"]
+
+[ext_resource type="PackedScene" uid="uid://dxpc2iac0hjpw" path="res://scenes/card_3d.tscn" id="1_mhw3m"]
+[ext_resource type="Script" uid="uid://cyba2a7qdayx0" path="res://src/example/standard-card.ts" id="2_swl73"]
+
+[node name="StandardCard" instance=ExtResource("1_mhw3m")]
+script = ExtResource("2_swl73")
+rank = 2
+suit = 1
