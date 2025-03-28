@@ -46,7 +46,7 @@ export default class LineCardLayout extends CardLayout {
     }
   }
 
-  override calculatecardPositionByIndex(numCards: number, index: number): Vector3 {
+  override calculateCardPositionByIndex(numCards: number, index: number): Vector3 {
     const cardOffset = this._getCardOffset(numCards, this.cardWidth);
     const handWidth = this.cardWidth + ((numCards - 1) * cardOffset);
     const startPos = this._getHandStartX(handWidth, this.cardWidth);

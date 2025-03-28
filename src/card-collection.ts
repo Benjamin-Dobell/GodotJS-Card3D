@@ -250,14 +250,14 @@ export default class CardCollection<Card extends CardNode = CardNode> extends Ga
   }
 
   applyCardLayout(): void {
-    this.cardLayoutStrategy.updatecardPositions(this.cards, this.cardPositionTweenDuration);
+    this.cardLayoutStrategy.updateCardPositions(this.cards, this.cardPositionTweenDuration);
   }
 
   previewCardRemove(draggingCard: Card): void {
     const cardIndex = this.cardIndices.get(draggingCard);
 
     if (cardIndex !== undefined) {
-      this.cardLayoutStrategy.updatecardPositions([
+      this.cardLayoutStrategy.updateCardPositions([
         ...this.cards.slice(0, cardIndex),
         ...this.cards.slice(cardIndex + 1),
       ], this.cardSwapTweenDuration);
@@ -275,7 +275,7 @@ export default class CardCollection<Card extends CardNode = CardNode> extends Ga
       ? [null, ...this.cards.slice(0, currentIndex), ...this.cards.slice(currentIndex + 1)]
       : [...this.cards.slice(0, index), null, ...this.cards.slice(index)];
 
-    this.cardLayoutStrategy.updatecardPositions(previewCards, this.cardSwapTweenDuration);
+    this.cardLayoutStrategy.updateCardPositions(previewCards, this.cardSwapTweenDuration);
   }
 
   enableDropZone(): void {
@@ -305,7 +305,7 @@ export default class CardCollection<Card extends CardNode = CardNode> extends Ga
 
     for (const card of this.cards) {
       const cardIndex = this.cardIndices.get(card) ?? -1;
-      const cardPosition = this.cardLayoutStrategy.calculatecardPositionByIndex(this.cards.length, cardIndex);
+      const cardPosition = this.cardLayoutStrategy.calculateCardPositionByIndex(this.cards.length, cardIndex);
       const cardScreenPosition = camera.unprojectPosition(cardPosition);
 
       if (mousePosition.x < cardScreenPosition.x) {

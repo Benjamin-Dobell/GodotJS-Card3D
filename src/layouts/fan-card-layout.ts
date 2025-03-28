@@ -21,7 +21,7 @@ export default class FanCardLayout extends CardLayout {
 
   private _startAngle: number = Math.PI / 2 + 0.5 * degreesToRadians(this._arcAngleDeg);
 
-  override calculatecardPositionByIndex(numCards: number, index: number): Vector3 {
+  override calculateCardPositionByIndex(numCards: number, index: number): Vector3 {
     const angleStep = degreesToRadians(this._arcAngleDeg) / (numCards + 1);
     const angle = this._startAngle - ((index + 1) * angleStep);
     const x = this.arcRadius * Math.cos(angle);
