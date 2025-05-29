@@ -16,7 +16,7 @@ runtime/core/camel_case_bindings_enabled=true
 
 config/name="GodotJS-Card3D"
 run/main_scene="uid://usdfp6fqxnev"
-config/features=PackedStringArray("4.4", "Mobile")
+config/features=PackedStringArray("4.5", "Mobile")
 config/icon="res://icon.svg"
 
 [dotnet]
