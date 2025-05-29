@@ -1,11 +1,11 @@
-///<reference path="godot.generated.d.ts" />
+
 declare module "godot-jsb" {
     import {
         Callable,
         MethodFlags,
-        MultiplayerAPI,
+        MultiplayerApi,
         MultiplayerPeer,
-        Object as GDObject,
+        GObject as GObject,
         PackedByteArray,
         PropertyInfo,
         StringName,
@@ -33,13 +33,56 @@ declare module "godot-jsb" {
      * Create godot Callable with a bound object `self`.
      * @deprecated [WARNING] avoid using this function directly, use `Callable.create` instead.
      */
-    function callable<S extends GDObject, F extends (this: S, ...args: any[]) => any>(self: S, fn: F): Callable<F>;
+    function callable<S extends GObject, F extends (this: S, ...args: any[]) => any>(self: S, fn: F): Callable<F>;
 
     /**
      * Explicitly convert a `PackedByteArray`(aka `Vector<uint8_t>`) into a javascript `ArrayBuffer`
      * @deprecated [WARNING] This free function '_to_array_buffer' is deprecated and will be removed in a future version, use 'PackedByteArray.to_array_buffer()' instead.
      */
     function to_array_buffer(packed: PackedByteArray): ArrayBuffer;
+
+    type AsyncModuleSourceLoaderResolveFunc = (source: string) => void;
+    type AsyncModuleSourceLoaderRejectFunc = (error: string) => void;
+
+    /**
+     * Set a callback function to handle the load of source code of asynchronous modules.
+     * Only use this function if it's not set in C++.
+     */
+    function set_async_module_loader(fn: (module_id: string, resolve: AsyncModuleSourceLoaderResolveFunc, reject: AsyncModuleSourceLoaderRejectFunc) => void): void;
+
+    interface MinimalCommonJSModule {
+        exports: any;
+        loaded: boolean;
+        id: string;
+    }
+
+    /**
+     * Import a CommonJS module asynchronously.
+     *
+     * NOTE: Only the source code is loaded asynchronously, the module is still evaluated on the script thread.
+     * NOTE: Calling the $import() function without a async module loader set in advance will return undefined.
+     * @param module_id the module id to import
+     * @example
+     * ```js
+     *   // [init.js]
+     *   import * as jsb from "godot-jsb";
+     *   jsb.set_async_module_loader((id, resolve, reject) => {
+     *       console.log("[test] async module loader start", id);
+     *       // here should be the actual async loading of the module, Http request, etc.
+     *       // we just simulate it with a timeout
+     *       setTimeout(() => {
+     *           console.log("[test] async module loader resolve", id);
+     *           resolve("exports.foo = function () { console.log('hello, module imported'); }");
+     *       }, 3000);
+     *   });
+     *   // [somescript.js]
+     *   jsb.$import("http://localhost/async_loaded.js").then(mod => {
+     *       console.log("[test] async module loader", mod);
+     *       mod.exports.foo();
+     *   });
+     * ```
+     */
+    function $import(module_id: string): Promise<MinimalCommonJSModule>;
 
     interface ScriptPropertyInfo {
         name: string;
@@ -53,8 +96,8 @@ declare module "godot-jsb" {
     namespace internal {
         type OnReadyEvaluatorFunc = (self: any) => any;
 
-        interface RPCConfig {
-            mode?: MultiplayerAPI.RPCMode,
+        interface RpcConfig {
+            mode?: MultiplayerApi.RpcMode,
             sync?: boolean,
             transfer_mode?: MultiplayerPeer.TransferMode,
             transfer_channel?: number,
@@ -65,19 +108,45 @@ declare module "godot-jsb" {
         function add_script_ready(target: any, details: { name: string, evaluator: string | OnReadyEvaluatorFunc }): void;
         function add_script_tool(target: any): void;
         function add_script_icon(target: any, path: string): void;
-        function add_script_rpc(target: any, propertyKey: string, config: RPCConfig): void;
+        function add_script_rpc(target: any, property_key: string, config: RpcConfig): void;
 
         // 0: deprecated, 1: experimental, 2: help
-        function set_script_doc(target: any, propertyKey: undefined | string, field: 0 | 1 | 2, message: string): void;
+        function set_script_doc(target: any, property_key: undefined | string, field: 0 | 1 | 2, message: string): void;
 
         function add_module(id: string, obj: any): void;
         function find_module(id: string): any;
         function notify_microtasks_run(): void;
 
-        /**
-         * Get the transformed type name of a Variant.Type
-         */
-        function get_type_name(type: Variant.Type): StringName;
+        namespace names {
+            /**
+             * Get the transformed name of a Godot class
+             */
+            function get_class<T extends string>(godot_class: T): T;
+            /**
+             * Get the transformed name of a Godot enum
+             */
+            function get_enum<T extends string>(godot_enum: T): T;
+            /**
+             * Get the transformed name of a Godot enum
+             */
+            function get_enum_value<T extends string>(godot_enum_value: T): T;
+            /**
+             * Get the transformed name of a Godot class member
+             */
+            function get_member<T extends string>(godot_member: T): T;
+            /**
+             * Get the internal Godot name/identifier from a transformed name i.e. the inverse of the other accessors.
+             */
+            function get_internal_mapping(name: string): string;
+            /**
+             * Get the transformed name of a Godot function parameter
+             */
+            function get_parameter<T extends string>(parameter: T): T;
+            /**
+             * Get the transformed type name of a Variant.Type
+             */
+            function get_variant_type<T extends string>(type: Variant.Type): StringName;
+        }
     }
 
     namespace editor {
@@ -227,9 +296,44 @@ declare module "godot-jsb" {
 
         function get_utility_functions(): Array<MethodBind>;
 
+        function get_input_actions(): Array<string>;
+
         function delete_file(filepath: string): void;
 
         const VERSION_DOCS_URL: string;
     }
 }
 
+// Globals
+
+/** [MDN Reference](https://developer.mozilla.org/docs/Web/API/console) */
+interface Console {
+    /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/console/assert_static) */
+    assert(condition?: boolean, ...data: any[]): void;
+    /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/console/debug_static) */
+    debug(...data: any[]): void;
+    /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/console/error_static) */
+    error(...data: any[]): void;
+    /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/console/info_static) */
+    info(...data: any[]): void;
+    /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/console/log_static) */
+    log(...data: any[]): void;
+    /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/console/time_static) */
+    time(label?: string): void;
+    /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/console/timeEnd_static) */
+    timeEnd(label?: string): void;
+    /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/console/trace_static) */
+    trace(...data: any[]): void;
+    /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/console/warn_static) */
+    warn(...data: any[]): void;
+}
+declare const console: Console;
+
+/** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/clearInterval) */
+declare function clearInterval(id: number | undefined): void;
+/** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/clearTimeout) */
+declare function clearTimeout(id: number | undefined): void;
+/** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/setInterval) */
+declare function setInterval(handler: () => void, timeout?: number, ...arguments: any[]): number;
+/** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Window/setTimeout) */
+declare function setTimeout(handler: () => void, timeout?: number, ...arguments: any[]): number;

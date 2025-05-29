@@ -1,6 +1,6 @@
 declare module "godot.annotations" {
-    import { PropertyHint, PropertyUsageFlags, Variant, MultiplayerAPI, MultiplayerPeer } from "godot";
-    import * as jsb from "godot-jsb";
+    import type * as Godot from "godot";
+    import type * as GodotJsb from "godot-jsb";
     export interface EnumPlaceholder {
     }
     export interface TypePairPlaceholder {
@@ -30,7 +30,7 @@ declare module "godot.annotations" {
     export function export_exp_easing(hint?: "" | "attenuation" | "positive_only" | "attenuation,positive_only"): (target: any, key: string) => void;
     export const ExportExpEasing: typeof export_exp_easing;
     /**
-     * A Shortcut for `export_(enum_value(Variant.Type, "TYPE_ARRAY"), { class_: clazz })`
+     * A Shortcut for `export_(Variant.Type.TYPE_ARRAY, { class_: clazz })`
      */
     export function export_array(clazz: ClassDescriptor): (target: any, key: string) => void;
     export const ExportArray: typeof export_array;
@@ -44,17 +44,17 @@ declare module "godot.annotations" {
     /**
      * [low level export]
      */
-    export function export_(type: Variant.Type, details?: {
+    export function export_(type: Godot.Variant.Type, details?: {
         class_?: ClassDescriptor;
-        hint?: PropertyHint;
+        hint?: Godot.PropertyHint;
         hint_string?: string;
-        usage?: PropertyUsageFlags;
+        usage?: Godot.PropertyUsageFlags;
     }): (target: any, key: string) => void;
-    export function Export(type: Variant.Type, details?: {
+    export function Export(type: Godot.Variant.Type, details?: {
         class?: ClassDescriptor;
-        hint?: PropertyHint;
+        hint?: Godot.PropertyHint;
         hintString?: string;
-        usage?: PropertyUsageFlags;
+        usage?: Godot.PropertyUsageFlags;
     }): (target: any, key: string) => void;
     /**
      * In Godot, class members can be exported.
@@ -62,11 +62,11 @@ declare module "godot.annotations" {
      * They will also be available for editing in the property editor.
      * Exporting is done by using the `@export_var` (or `@export_`) annotation.
      */
-    export function export_var(type: Variant.Type, details?: {
+    export function export_var(type: Godot.Variant.Type, details?: {
         class_?: ClassDescriptor;
-        hint?: PropertyHint;
+        hint?: Godot.PropertyHint;
         hint_string?: string;
-        usage?: PropertyUsageFlags;
+        usage?: Godot.PropertyUsageFlags;
     }): (target: any, key: string) => void;
     export const ExportVar: typeof export_var;
     /**
@@ -79,19 +79,19 @@ declare module "godot.annotations" {
      */
     export function export_flags(enum_type: any): (target: any, key: string) => void;
     export const ExportFlags: typeof export_flags;
-    export interface RPCConfig {
-        mode?: MultiplayerAPI.RPCMode;
+    export interface RpcConfig {
+        mode?: Godot.MultiplayerApi.RpcMode;
         sync?: "call_remote" | "call_local";
-        transfer_mode?: MultiplayerPeer.TransferMode;
+        transfer_mode?: Godot.MultiplayerPeer.TransferMode;
         transfer_channel?: number;
     }
-    export function rpc(config?: RPCConfig): (target: any, propertyKey?: PropertyKey, descriptor?: PropertyDescriptor) => void;
+    export function rpc(config?: RpcConfig): (target: any, propertyKey?: PropertyKey, descriptor?: PropertyDescriptor) => void;
     export const Rpc: typeof rpc;
     /**
      * auto initialized on ready (before _ready called)
      * @param evaluator for now, only string is accepted
      */
-    export function onready(evaluator: string | jsb.internal.OnReadyEvaluatorFunc): (target: any, key: string) => void;
+    export function onready(evaluator: string | GodotJsb.internal.OnReadyEvaluatorFunc): (target: any, key: string) => void;
     export const OnReady: typeof onready;
     export function tool(): (target: any) => void;
     export const Tool: typeof tool;
@@ -104,6 +104,21 @@ declare module "godot.annotations" {
     export function help(message?: string): (target: any, propertyKey?: PropertyKey, descriptor?: PropertyDescriptor) => void;
     export const Help: typeof help;
 }
+declare module "godot.lib.api" {
+    import type * as Godot from "godot";
+    import type * as GodotJsb from "godot-jsb";
+    const api: typeof Godot & {
+        jsb: typeof GodotJsb;
+    };
+    /**
+     * This is a starting point for writing GodotJS code that is camel-case binding agnostic at runtime.
+     *
+     * Library code must consume this API rather than "godot", and be built with camel case bindings disabled. This is to
+     * ensure that the library will function at runtime for all projects irrespective of whether they have camel-case
+     * bindings enabled.
+     */
+    export = api;
+}
 declare module "godot.typeloader" {
     /**
      * @param type the loaded type or function in godot module
@@ -112,7 +127,4 @@ declare module "godot.typeloader" {
     export function on_type_loaded(type_name: string | string[], callback: TypeLoadedCallback): void;
 }
 declare module "jsb.core" { }
-declare const ProxyTarget: unique symbol;
-declare const proxy_unwrap: (value: any) => any;
-declare const proxyable_prototypes: any[];
-declare const proxy_wrap: (value: any) => any;
+declare module "jsb.inject" { }

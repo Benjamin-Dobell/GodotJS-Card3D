@@ -1,6 +1,6 @@
 declare module "jsb.editor.codegen" {
-    import { GArray, GDictionary, Node, PropertyInfo } from 'godot';
-    import * as jsb from "godot-jsb";
+    import type { GArray, GDictionary, Node, PropertyInfo, Resource } from "godot";
+    import type * as GodotJsb from "godot-jsb";
     export enum DescriptorType {
         Godot = 0,
         User = 1,
@@ -14,7 +14,8 @@ declare module "jsb.editor.codegen" {
         Conditional = 9,
         Tuple = 10,
         Infer = 11,
-        Mapped = 12
+        Mapped = 12,
+        Indexed = 13
     }
     /**
      * Reference to a built-in type, either declared in the 'godot' namespace, or available as part of the standard library.
@@ -77,7 +78,7 @@ declare module "jsb.editor.codegen" {
     export type StringLiteralTypeDescriptor = GDictionary<{
         type: DescriptorType.StringLiteral;
         value: string;
-        template: boolean;
+        template?: boolean;
     }>;
     export type NumberLiteralTypeDescriptor = GDictionary<{
         type: DescriptorType.NumericLiteral;
@@ -121,72 +122,79 @@ declare module "jsb.editor.codegen" {
         as?: TypeDescriptor;
         value: TypeDescriptor;
     }>;
-    export type TypeDescriptor = GodotTypeDescriptor | UserTypeDescriptor | FunctionLiteralTypeDescriptor | ObjectLiteralTypeDescriptor | StringLiteralTypeDescriptor | NumberLiteralTypeDescriptor | BooleanLiteralTypeDescriptor | TupleTypeDescriptor | UnionTypeDescriptor | IntersectionTypeDescriptor | InferTypeDescriptor | ConditionalTypeDescriptor | MappedTypeDescriptor;
+    export type IndexedTypeDescriptor = GDictionary<{
+        type: DescriptorType.Indexed;
+        base: TypeDescriptor;
+        index: TypeDescriptor;
+    }>;
+    export type TypeDescriptor = GodotTypeDescriptor | UserTypeDescriptor | FunctionLiteralTypeDescriptor | ObjectLiteralTypeDescriptor | StringLiteralTypeDescriptor | NumberLiteralTypeDescriptor | BooleanLiteralTypeDescriptor | TupleTypeDescriptor | UnionTypeDescriptor | IntersectionTypeDescriptor | InferTypeDescriptor | ConditionalTypeDescriptor | MappedTypeDescriptor | IndexedTypeDescriptor;
     /**
      * Codegen analogue of NodePathMap.
      */
     export type NodeTypeDescriptorPathMap = GDictionary<Partial<Record<string, TypeDescriptor>>>;
     export enum CodeGenType {
-        ScriptNodeTypeDescriptor = 0
+        ScriptNodeTypeDescriptor = 0,
+        ScriptResourceTypeDescriptor = 1
     }
     /**
-     * Handle a NodeTypeDescriptorCodeGenRequest to overwrite the generated type for node's using this script.
+     * Handle a NodeTypeDescriptorCodeGenRequest to overwrite the generated type for nodes using this script.
      */
     export type ScriptNodeTypeDescriptorCodeGenRequest = GDictionary<{
         type: CodeGenType.ScriptNodeTypeDescriptor;
         node: Node;
         children: NodeTypeDescriptorPathMap;
     }>;
-    export type CodeGenRequest = ScriptNodeTypeDescriptorCodeGenRequest;
+    /**
+     * Handle a ScriptResourceTypeDescriptorCodeGenRequest to overwrite the generated type for resources using this script.
+     */
+    export type ScriptResourceTypeDescriptorCodeGenRequest = GDictionary<{
+        type: CodeGenType.ScriptResourceTypeDescriptor;
+        resource: Resource;
+    }>;
+    export type CodeGenRequest = ScriptNodeTypeDescriptorCodeGenRequest | ScriptResourceTypeDescriptorCodeGenRequest;
     /**
      * You can manipulate GodotJS' codegen by exporting a function from your script/module called `codegen`.
      */
     export type CodeGenHandler = (request: CodeGenRequest) => undefined | TypeDescriptor;
     export class TypeDB {
         singletons: {
-            [name: string]: jsb.editor.SingletonInfo;
+            [name: string]: GodotJsb.editor.SingletonInfo;
         };
         classes: {
-            [name: string]: jsb.editor.ClassInfo;
+            [name: string]: GodotJsb.editor.ClassInfo;
         };
         primitive_types: {
-            [name: string]: jsb.editor.PrimitiveClassInfo;
-        };
-        primitive_type_names: {
-            [type: number]: string;
+            [name: string]: GodotJsb.editor.PrimitiveClassInfo;
         };
         globals: {
-            [name: string]: jsb.editor.GlobalConstantInfo;
+            [name: string]: GodotJsb.editor.GlobalConstantInfo;
         };
         utilities: {
-            [name: string]: jsb.editor.MethodBind;
-        };
-        internal_class_name_map: {
-            [name: string]: string;
+            [name: string]: GodotJsb.editor.MethodBind;
         };
         class_docs: {
-            [name: string]: jsb.editor.ClassDoc | false;
+            [name: string]: GodotJsb.editor.ClassDoc | false;
         };
         constructor();
-        find_doc(class_name: string): jsb.editor.ClassDoc | undefined;
+        find_doc(class_name: string): GodotJsb.editor.ClassDoc | undefined;
         is_primitive_type(name: string): boolean;
         is_valid_method_name(name: string): boolean;
-        make_classname(class_name: string, used_as_input: boolean): string;
-        make_typename(info: PropertyInfo, used_as_input: boolean): string;
-        make_arg(info: PropertyInfo, type_replacer?: (name: string) => string): string;
-        make_literal_value(value: jsb.editor.DefaultArgumentInfo): string;
-        replace_type_inplace(name: string | undefined, type_replacer?: (name: string) => string): string;
-        make_arg_default_value(method_info: jsb.editor.MethodBind, index: number, type_replacer?: (name: string) => string): string;
-        make_args(method_info: jsb.editor.MethodBind, type_replacer?: (name: string) => string): string;
-        make_return(method_info: jsb.editor.MethodBind, type_replacer?: (name: string) => string): string;
-        make_signal_type(method_info: jsb.editor.MethodBind): string;
+        make_classname(internal_class_name: string): string;
+        make_typename(info: PropertyInfo, used_as_input: boolean, non_nullable: boolean): string;
+        make_arg(info: PropertyInfo, optional?: boolean): string;
+        make_literal_value(value: GodotJsb.editor.DefaultArgumentInfo): string;
+        make_arg_default_value(method_info: GodotJsb.editor.MethodBind, index: number): string;
+        make_args(method_info: GodotJsb.editor.MethodBind): string;
+        make_return(method_info: GodotJsb.editor.MethodBind): string;
+        make_signal_type(method_info: GodotJsb.editor.MethodBind): string;
     }
-    export class TSDCodeGen {
+    export class TsdCodeGen {
         private _split_index;
         private _outDir;
         private _splitter;
         private _types;
-        constructor(outDir: string);
+        private _use_project_settings;
+        constructor(outDir: string, use_project_settings: boolean);
         private make_path;
         private new_splitter;
         private split;
@@ -195,20 +203,29 @@ declare module "jsb.editor.codegen" {
         emit(): Promise<void>;
         private emit_utility;
         private emit_global;
-        private emit_mock;
+        private emit_aliases;
         private emit_singleton;
         private emit_godot_primitive;
         private emit_godot_class;
     }
-    export class SceneTSDCodeGen {
+    export class SceneTsdCodeGen {
         private _out_dir;
         private _scene_paths;
         private _types;
         constructor(out_dir: string, scene_paths: string[]);
-        private make_path;
+        private make_scene_path;
         emit(): Promise<void>;
         private emit_children_node_types;
         private emit_scene_node_types;
+    }
+    export class ResourceTsdCodeGen {
+        private _out_dir;
+        private _resource_paths;
+        private _types;
+        constructor(out_dir: string, resource_paths: string[]);
+        private make_resource_path;
+        emit(): Promise<void>;
+        private emit_resource_type;
     }
 }
 declare module "jsb.editor.main" {

@@ -13,7 +13,7 @@ import {
   Vector2,
   Vector3,
 } from 'godot';
-import { ExportObject, ExportSignal, ExportVar } from 'godot.annotations';
+import { ExportSignal, ExportVar } from 'godot.annotations';
 import { CodeGenHandler, CodeGenType, DescriptorType, TypeDescriptor, UserTypeDescriptor } from 'jsb.editor.codegen';
 import CardNode from './card-node';
 import CardCollection from './card-collection';
@@ -94,8 +94,8 @@ export default class DragController<Card extends CardNode, Map extends Record<st
   private _cardCollections: Array<CardCollection<Card>> = [];
 
   override _ready(): void {
-    const window = this.getWindow();
-    this._camera = window.getCamera3D();
+    const window = this.getWindow()!;
+    this._camera = window.getCamera3D()!;
 
     for (const child of this.getChildren().proxy()) {
       if (child instanceof CardCollection) {
@@ -111,7 +111,7 @@ export default class DragController<Card extends CardNode, Map extends Record<st
   override _input(event: InputEventMouseButton | InputEventMouseMotion): void {
     if (event instanceof InputEventMouseButton) {
       if (this._dragging && event.buttonIndex === 1 && !event.pressed) {
-        const mousePosition = this.getViewport().getMousePosition();
+        const mousePosition = this.getViewport()!.getMousePosition();
         this._stopDrag(mousePosition);
       }
     } else if (event instanceof InputEventMouseMotion) {
@@ -251,7 +251,7 @@ export default class DragController<Card extends CardNode, Map extends Record<st
       return;
     }
 
-    const mousePosition = this.getViewport().getMousePosition();
+    const mousePosition = this.getViewport()!.getMousePosition();
     const position3D = this.cardDragPlane.intersectsRay(this._camera.projectRayOrigin(mousePosition), this._camera.projectRayNormal(mousePosition));
     const cardPosition = this._draggingCard.globalPosition;
 

@@ -35,8 +35,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
 current = true
 fov = 84.375
 
-[node name="Table" type="Node3D" parent="."]
+[node name="Table" type="Node3D" parent="." node_paths=PackedStringArray("deck")]
 script = ExtResource("1_trlmi")
+deck = NodePath("../Deck")
 
 [node name="DragController" type="Node3D" parent="Table"]
 script = ExtResource("2_07uyt")

@@ -141,8 +141,10 @@ export default class CardNode extends GameNode<SceneNodes['scenes/card_3d.tscn']
     if (event instanceof InputEventMouseButton) {
       if (event.buttonIndex === 1) {
         if (event.pressed) {
+          console.log("Down")
           this.cardMouseDown.emit();
         } else {
+          console.log("Up")
           this.cardMouseUp.emit();
         }
       }

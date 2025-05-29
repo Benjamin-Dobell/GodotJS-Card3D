@@ -81,7 +81,7 @@ export default class CardCollection<Card extends CardNode = CardNode> extends Ga
   cardSwapTweenDuration = 0.25;
 
   @ExportObject(Script)
-  cardNodeScript: Script = ResourceLoader.load('res://src/card-node.ts') as Script; // TODO: Won't need cast when we add resource codegen.
+  cardNodeScript = ResourceLoader.load('res://src/card-node.ts');
 
   private _cardLayoutStrategy: CardLayout = new LineCardLayout();
 
@@ -103,12 +103,15 @@ export default class CardCollection<Card extends CardNode = CardNode> extends Ga
   }
 
   private _onCardPressed(card: Card) {
+    console.log('_onCardPressed');
     if (this.canSelectCard(card)) {
+      console.log('_onCardPressed: canSelect');
       this.cardSelected.emit(card);
     }
   }
 
   private _onCardClicked(card: Card) {
+    console.log('_onCardClicked');
     this.cardClicked.emit(card);
   }
 
@@ -131,7 +134,7 @@ export default class CardCollection<Card extends CardNode = CardNode> extends Ga
     this.applyCardLayout();
   }
 
-  get dropZoneShape(): Shape3D {
+  get dropZoneShape(): null | Shape3D {
     if (!this.dropZoneCollisionShape) {
       throw new Error('CardCollection3D is not ready');
     }
@@ -300,7 +303,12 @@ export default class CardCollection<Card extends CardNode = CardNode> extends Ga
   }
 
   getCardIndexAtPoint(mousePosition: Vector2): number {
-    const camera = this.getWindow().getCamera3D();
+    const camera = this.getWindow()?.getCamera3D();
+
+    if (!camera) {
+      throw new Error('getCardIndexAtPoint — No active camera');
+    }
+
     let index = this.cards.length;
 
     for (const card of this.cards) {

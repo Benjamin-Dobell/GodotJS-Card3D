@@ -1,3 +1,5 @@
+import { GDictionary, Time } from 'godot';
+
 export const Rank = {
   TWO: 2,
   THREE: 3,

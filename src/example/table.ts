@@ -1,14 +1,16 @@
-import { Node3D, InputEvent, ResourceLoader, PackedScene, SceneNodes, NodePathMap, ResolveNodePath, Node } from 'godot';
+import { Node3D, InputEvent, ResourceLoader, PackedScene, SceneNodes, NodePathMap, ResolveNodePath, Node, ResourceTypes } from 'godot';
 import { Rank, Suit } from './card-data';
 import CardCollection from '../card-collection';
 import PileCardLayout from '../layouts/pile-card-layout';
 import LineCardLayout from '../layouts/line-card-layout';
 import FanCardLayout from '../layouts/fan-card-layout';
 import StandardCard from './standard-card';
+import { ExportObject, ExportVar } from 'godot.annotations';
 
 function instantiateStandardCard(rank: Rank, suit: Suit): StandardCard {
-  const scene = ResourceLoader.load('res://scenes/example/standard_card.tscn') as PackedScene;
-  const card = scene.instantiate() as StandardCard;
+  const scene = ResourceLoader.load('res://scenes/example/standard_card.tscn');
+  const card
+    = scene.instantiate();
   card.rank = rank;
   card.suit = suit;
   return card;
@@ -25,6 +27,9 @@ type ResolveNodeTree<Map extends NodePathMap, Path extends string, Default = nev
     : Default;
 
 export default class Table extends Node3D<ResolveNodeTree<SceneNodes['scenes/example/table.tscn'], 'Table'>> {
+  @ExportObject(Node3D)
+  deck: null | Node3D = null;
+
   suits: Suit[] = [Suit.CLUB, Suit.SPADE, Suit.DIAMOND, Suit.HEART];
   ranks: Rank[] = [...Object.values(Rank)];
 
@@ -66,7 +71,7 @@ export default class Table extends Node3D<ResolveNodeTree<SceneNodes['scenes/exa
   addCard(): void {
     const { rank, suit } = this.nextCard();
     const card = instantiateStandardCard(rank, suit);
-    const deck = this.getNode('../Deck');
+    const deck = this.deck;
 
     this.hand?.appendCard(card);
 
